@@ -1,0 +1,453 @@
+<!DOCTYPE >
+ <html>
+	<head>
+		<meta charset="utf-8" >
+                <meta name="viewport" >
+		<title>710483104 林邑泉 Perceptron</title>
+		<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+        <meta property="og:title" content="710483104 林邑泉 Perceptron" />
+        <meta property="og:description" content="感知器使用特徵向量來表示的前饋式人工神經網絡，它是一種二元分類器，把矩陣上的輸入 {\displaystyle x} x（實數值向量）映射到輸出值 {\displaystyle f(x)} f(x)上（一個二元的值）。" />
+        <meta name="description" content="感知器使用特徵向量來表示的前饋式人工神經網絡，它是一種二元分類器，把矩陣上的輸入 {\displaystyle x} x（實數值向量）映射到輸出值 {\displaystyle f(x)} f(x)上（一個二元的值）。"/>
+		
+		<script language =javascript >
+		var l=0;
+		var list,testlist;
+		var w;
+		var flag;
+		var learning=0.3,thread=0.8;
+		function traintable()	
+		{
+			var inputnum=0,outputnum=0,i=0;
+			var creattable="";
+			l=0;
+			creattable="<font>Input</font><table border=\"2\" style=\"margin-top:10px;\"><tr>";
+			inputnum=document.getElementById("input").value;
+			outputnum=document.getElementById("output").value;
+			learning=document.getElementById("learn").value;
+			thread=document.getElementById("thr").value;
+			
+			
+			for (i=0;i<inputnum;i++)
+			{
+				creattable=creattable+"<td id=\"inputnum"+i+"\" onclick=\"changecolor('inputnum"+i+"')\" style=\"width:60px;height:60px;background-color:white;\"></td>";
+				
+			}
+			
+			creattable=creattable+"</tr></table><br><font>Output</font><table border=\"2\" style=\"margin-top:10px;\"><tr>";
+			
+			for (i=0;i<outputnum;i++)
+			{
+				creattable=creattable+"<td id=\"outputnum"+i+"\" onclick=\"changecolor('outputnum"+i+"')\" style=\"width:60px;height:60px;background-color:white;\"></td>";
+				
+			}
+			
+			creattable=creattable+"</tr></table><br>";
+			
+			creattable=creattable+"<div><input  type=\"button\" size=\"2\" value=\"新增\" onclick=\"addtrain()\" style=\"text-align: right;margin-left:10px;font-size:32px;\"></div>";
+			
+			document.getElementById("traininput").innerHTML=creattable;
+		}
+		
+		
+		function changecolor(obj)	
+		{
+			if(document.getElementById(obj).style.backgroundColor=="white")
+				document.getElementById(obj).style.backgroundColor="black";
+			else
+				document.getElementById(obj).style.backgroundColor='white';
+		}
+		
+		function addtrain()
+		{
+			var inputnum=0,outputnum=0,i=0,j=0;
+			var obj="";
+			var creattable="";
+			inputnum=document.getElementById("input").value;
+			outputnum=document.getElementById("output").value;
+			if(l==0)
+			{
+				list=new Array(Math.pow(2,inputnum));
+				testlist=new Array(inputnum+outputnum);
+				for (i=0;i<Math.pow(2,inputnum);i++)
+				{
+					list[i]=new Array(inputnum+outputnum);
+				}
+				for (i=0;i<Math.pow(2,inputnum);i++)
+				{
+					for (j=0;j<inputnum+outputnum;j++)
+					{
+						list[i][j]=-1;
+					}
+				}
+			}
+			
+			
+			for (i=0;i<inputnum;i++)
+			{
+				obj="inputnum"+i;
+				if(document.getElementById(obj).style.backgroundColor=="black")
+				{
+					list[l][i]=1;
+					document.getElementById(obj).style.backgroundColor="white";
+				}
+				else
+				{
+					list[l][i]=0;
+				}
+			}			
+			for (i=0;i<outputnum;i++)
+			{
+				obj="outputnum"+i;
+				if(document.getElementById(obj).style.backgroundColor=="black")
+				{
+					list[l][inputnum+i]=1;
+					document.getElementById(obj).style.backgroundColor="white";
+				}
+				else
+				{
+					list[l][inputnum+i]=-1;
+				}
+			}
+			
+			l=l+1;
+			
+			creattable="<font>Train List</font><table border=\"0\" style=\"margin-top:10px;\"><tr><td><table border=\"2\">";			
+			for (j=0;j<l;j++)
+			{
+				creattable=creattable+"<tr>";	
+				for (i=0;i<inputnum;i++)
+				{
+					if(list[j][i]==1)
+						creattable=creattable+"<td style=\"width:60px;height:60px;background-color:black;\"></td>";
+					else
+						creattable=creattable+"<td style=\"width:60px;height:60px;background-color:white;\"></td>";
+				}
+				creattable=creattable+"</tr>";	
+			}
+			
+			creattable=creattable+"</table></td><td><table border=\"2\" style=\"margin-left:150px;\">";
+			
+			for (j=0;j<l;j++)
+			{
+				creattable=creattable+"<tr>";
+				
+				for (i=0;i<outputnum;i++)
+				{
+				
+					if(list[j][inputnum+i]==1)
+						creattable=creattable+"<td style=\"width:60px;height:60px;background-color:black;\"></td>";
+					else
+						creattable=creattable+"<td style=\"width:60px;height:60px;background-color:white;\"></td>";
+				}
+				creattable=creattable+"</tr>";	
+			}
+			creattable=creattable+"</table></tr></table><br>";
+			
+			creattable=creattable+"<div><input  type=\"button\" size=\"2\" value=\"訓練\" onclick=\"train()\" style=\"text-align: right;margin-left:10px;font-size:32px;\"></div>";
+			
+			document.getElementById("trainlist").innerHTML=creattable;
+			
+			
+			
+		}
+		
+		function train()
+		{
+			var inputnum=0,outputnum=0,i=0,j=0,k=0,y=0,run=0;
+			inputnum=document.getElementById("input").value;
+			outputnum=document.getElementById("output").value;
+			w=new Array(outputnum);
+			flag=new Array(outputnum);
+			for (i=0;i<outputnum;i++)
+			{
+				w[i]=new Array(inputnum);
+				flag[i]=1;
+			}
+			for (i=0;i<outputnum;i++)
+			{
+				for (j=0;j<inputnum;j++)
+				{
+					w[i][j]=0;
+				}
+			}
+			
+			for(j=0;j<outputnum;j++)
+			{
+				flag[j]=1;
+				while(flag[j]!=0 && run<=10000)
+				{
+					flag[j]=0;
+					for (i=0;i<l;i++)
+					{
+						y=f(j,i);
+						if(y!=list[i][inputnum+j])
+						{
+							flag[j]=1;
+							//alert("weightupdate");
+							weightupdate(j,y,i);
+						}	
+					}
+					if (run==10000)
+					{
+						alert("訓練失敗");
+						window.location.reload();
+					}
+					run=run+1;
+				}
+			}
+			testinput();
+		}
+		
+		function f(woutput,listline)
+		{
+			var inputnum=0,i=0,sum=0;
+			var flag;
+			inputnum=document.getElementById("input").value;
+			for (i=0;i<inputnum;i++)
+			{
+				sum=sum+w[woutput][i]*list[listline][i];
+				//alert(sum+" "+i+" "+w[woutput][i]+" "+listline);
+			}
+			sum=sum-thread;
+			if(sum>0)
+			{
+				return 1;
+			}
+			else 
+				return -1;
+		}
+		
+		function weightupdate(woutput,y,listline)
+		{
+			var inputnum=0,i=0;
+			inputnum=document.getElementById("input").value;
+			for (i=0;i<inputnum;i++)
+			{
+				w[woutput][i]=w[woutput][i]+learning*(list[listline][inputnum+woutput]-y)*list[listline][i];
+				//alert(w[woutput][i]+" "+list[listline][inputnum+woutput]+" "+y+" "+list[listline][i]);
+			}
+			
+		}
+		
+		function testinput()	
+		{
+			var inputnum=0,outputnum=0,i=0;
+			var creattable="";
+			creattable="<font>Test Input</font><table border=\"2\" style=\"margin-top:30px;\"><tr>";
+			inputnum=document.getElementById("input").value;
+			outputnum=document.getElementById("output").value;
+　　		document.getElementById("testtable").style.borderTop ="2px solid #222222";
+			
+			
+			for (i=0;i<inputnum;i++)
+			{
+				creattable=creattable+"<td id=\"testinputnum"+i+"\" onclick=\"changecolor('testinputnum"+i+"')\" style=\"width:60px;height:60px;background-color:white;\"></td>";
+				
+			}
+			
+			creattable=creattable+"</tr></table><br>";
+			
+			creattable=creattable+"</tr></table><br>";
+			
+			creattable=creattable+"<div><input  type=\"button\" size=\"2\" value=\"測試\" onclick=\"test()\" style=\"text-align: right;margin-left:10px;font-size:32px;\"></div>";
+			
+			document.getElementById("testinput").innerHTML=creattable;
+		}
+		
+		function test()
+		{
+			var inputnum=0,outputnum=0,i=0,fileinput="",fileoutput="",y=0;
+			inputnum=document.getElementById("input").value;
+			outputnum=document.getElementById("output").value;
+			
+			
+			for (i=0;i<inputnum;i++)
+			{
+				fileinput="testinputnum"+i;
+				if(document.getElementById(fileinput).style.backgroundColor=="white")
+					testlist[i]=0;
+				else
+					testlist[i]=1;
+				document.getElementById(fileinput).style.backgroundColor="white";
+			}
+			for (i=0;i<outputnum;i++)
+			{
+				y=testf(i,testlist);
+				if(y==1)
+					testlist[inputnum+i]=1;
+				else
+					testlist[inputnum+i]=-1;
+			}
+			testoutput();
+			
+			for (i=0;i<inputnum;i++)
+			{
+				fileinput="resultinputnum"+i;
+				if(testlist[i]==1)
+					document.getElementById(fileinput).style.backgroundColor="black";
+				else
+					document.getElementById(fileinput).style.backgroundColor="white";
+			}
+			
+			for (i=0;i<outputnum;i++)
+			{
+				fileinput="resultoutputnum"+i;
+				if(testlist[inputnum+i]==1)
+					document.getElementById(fileinput).style.backgroundColor="black";
+				else
+					document.getElementById(fileinput).style.backgroundColor="white";
+			}
+		}
+		
+		function testoutput()	
+		{
+			var inputnum=0,outputnum=0,i=0;
+			var creattable="";
+			creattable="<font>Test Input</font><table border=\"2\" style=\"margin-top:30px;\"><tr>";
+			inputnum=document.getElementById("input").value;
+			outputnum=document.getElementById("output").value;
+　　		document.getElementById("testtable").style.borderTop ="2px solid #222222";
+			
+			
+			for (i=0;i<inputnum;i++)
+			{
+				creattable=creattable+"<td id=\"resultinputnum"+i+"\" style=\"width:60px;height:60px;background-color:white;\"></td>";
+				
+			}
+			
+			creattable=creattable+"</tr></table><br><font>Test Output</font><table border=\"2\" style=\"margin-top:10px;\"><tr>";
+			
+			for (i=0;i<outputnum;i++)
+			{
+				creattable=creattable+"<td id=\"resultoutputnum"+i+"\"  style=\"width:60px;height:60px;background-color:white;\"></td>";
+				
+			}
+			
+			creattable=creattable+"</tr></table><br>";
+			
+			creattable=creattable+"<div><input  type=\"button\" size=\"2\" value=\"重新\" onclick=\"window.location.reload()\" style=\"text-align: right;margin-left:10px;font-size:32px;\"></div>";
+			
+			document.getElementById("testoutput").innerHTML=creattable;
+		}
+		
+		
+		function testf(woutput,testlist)
+		{
+			var inputnum=0,i=0,sum=0;
+			var flag;
+			inputnum=document.getElementById("input").value;
+			for (i=0;i<inputnum;i++)
+			{
+				sum=sum+w[woutput][i]*testlist[i];
+				//alert(sum+" "+w[woutput][i]);
+			}
+			sum=sum-thread;
+			if(sum>0)
+			{
+				return 1;
+			}
+			else 
+				return -1;
+		}
+		</script>
+
+
+	</head>
+	<body style="background-color:#DCDCDC">
+		<div style="margin:auto;margin-top:40px;margin-left:20px;font-size:40px;">
+			<font>710483104 林邑泉 Perceptron<br></font>
+		</div>
+		<table border="0" style="margin-top:20px;margin-left:20px;width:100%">
+			<tr>
+				<td style="width:50%;">
+					<div>
+						<table border="0" >
+							<tr>
+								<td>
+									<div style="font-size:40px;">
+										<font>輸入數量:</font>
+										<input id="input" type="text" size="2" value="2" style="text-align: right;margin-left:10px;font-size:32px;"/>
+									</div>
+								</td>
+								<td width="20px">
+								</td>
+								<td>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<div style="font-size:40px;">
+										<font>輸出數量:</font>
+										<input id="output" type="text" size="2" value="2" style="text-align: right;margin-left:10px;font-size:32px;"/>
+									</div>
+								</td>
+								<td>
+								</td>
+								<td>
+								</td>
+							</tr>
+							<tr>
+								<td>
+								</td>
+								<td>
+								</td>
+								<td>
+								</td>
+								<td>
+								</td>
+								<td>
+									<div style="font-size:40px;">
+										<input type="button" size="2" value="確定" onclick="traintable()" style="text-align: right;margin-left:10px;font-size:32px;">
+									</div>
+								</td>
+							</tr>
+							<tr>
+								
+								<td>
+									<div style="font-size:40px;">
+										<font>學習速率:</font>
+										<input id="learn" type="text" size="2" value="0.3" style="text-align: right;margin-left:10px;font-size:32px;"/>
+									</div>
+								</td>
+								<td width="20px">
+								</td>
+								<td>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<div style="font-size:40px;">
+										<font>門檻值數:</font>
+										<input id="thr" type="text" size="2" value="0.8" style="text-align: right;margin-left:10px;font-size:32px;"/>
+									</div>
+								</td>
+								<td>
+								<td>
+								</td>
+								</td>
+							</tr>
+						</table>
+					</div>
+					<div id="traininput" style="margin-top:20px;margin-left:0px;font-size:32px;">
+					</div>
+				</td>
+				<td style="vertical-align:text-top;width:50%;">
+					<div id="trainlist" style="margin-top:0px;margin-left:0px;font-size:32px;">
+					</div>
+				</td>
+			</tr>
+		</table>
+		
+		<table id="testtable" style="margin-top:60px;margin-left:0px;width:100%;position:relative">
+			<tr>
+				<td style="vertical-align:text-top;width:50%;">
+					<div id="testinput" style="margin-top:40px;margin-left:20px;font-size:32px;">
+					</div>
+				</td>
+				<td style="vertical-align:text-top;width:50%;">
+					<div id="testoutput" style="margin-top:40px;margin-left:0px;font-size:32px;">
+					</div>
+				</td>
+		</div>
+	</body>
+</html>
